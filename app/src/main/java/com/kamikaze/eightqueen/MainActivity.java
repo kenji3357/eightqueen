@@ -33,36 +33,32 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-                calculate(QUEEN_TOTAL);
-                handler.post(()-> {
-                    showResult(QUEEN_TOTAL);
-                    Toast.makeText(getApplicationContext(), String.valueOf(positionRecord.size()), Toast.LENGTH_LONG).show();
+                calculate();
+                handler.post(() -> {
+                    showResult();
+//                    Toast.makeText(getApplicationContext(), String.valueOf(positionRecord.size()), Toast.LENGTH_LONG).show();
                 });
             }
         }).start();
     }
 
-    private void calculate(int queenAmount) {
-        for (int i = 0; i < queenAmount; i++) {
+    private void calculate() {
+        for (int i = 0; i < QUEEN_TOTAL; i++) {
             Pair initPair = new Pair(i, 0);
             queenPosition.add(initPair);
-            findNextPosition(queenAmount, 1);
+            findNextPosition();
         }
     }
 
-    private void findNextPosition(int queenAmount, int currentRow) {
-        while (currentRow < queenAmount) {
+    private void findNextPosition() {
+        int currentRow = 1;
+        while (currentRow < QUEEN_TOTAL) {
             int queenAmountBeforeCalc = queenPosition.size();
-            for (int x = 0; x < queenAmount; x++) {
+            for (int x = 0; x < QUEEN_TOTAL; x++) {
                 if (disposePosition == null) {
                     if (isValidPosition(x, currentRow)) {
-                        Pair newPair = new Pair(x, currentRow);
-                        queenPosition.add(newPair);
-                        if (queenPosition.size() == QUEEN_TOTAL) {
-                            addToSolution();
-                            disposePosition = queenPosition.get(queenPosition.size() - 1);
-                            queenPosition.remove(queenPosition.size() - 1);
-                        } else {
+                        addToQueenPosition(x, currentRow);
+                        if (isAddRowNeeded()) {
                             currentRow++;
                             break;
                         }
@@ -71,13 +67,8 @@ public class MainActivity extends AppCompatActivity {
                     if (x > (int) (disposePosition.first)) {
                         disposePosition = null;
                         if (isValidPosition(x, currentRow)) {
-                            Pair newPair = new Pair(x, currentRow);
-                            queenPosition.add(newPair);
-                            if (queenPosition.size() == QUEEN_TOTAL) {
-                                addToSolution();
-                                disposePosition = queenPosition.get(queenPosition.size() - 1);
-                                queenPosition.remove(queenPosition.size() - 1);
-                            } else {
+                            addToQueenPosition(x, currentRow);
+                            if (isAddRowNeeded()) {
                                 currentRow++;
                                 break;
                             }
@@ -91,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
                 queenAmountBeforeCalc = queenPosition.size();
                 if (queenAmountBeforeCalc == 0) {
                     disposePosition = null;
-                    currentRow--;
                     break;
                 }
                 currentRow--;
@@ -103,20 +93,31 @@ public class MainActivity extends AppCompatActivity {
         queenPosition.clear();
     }
 
+    private void addToQueenPosition(int x, int currentRow) {
+        Pair newPair = new Pair(x, currentRow);
+        queenPosition.add(newPair);
+    }
+
     private boolean isValidPosition(int x, int y) {
         for (int i = 0; i < queenPosition.size(); i++) {
             Pair target = queenPosition.get(i);
+            float slope = (float) ((y - (int) target.second)) / (float) (x - (int) target.first);
             if ((int) target.first == x) {
                 return false;
-            } else {
-                float slope = (float) ((y - (int) target.second)) / (float) (x - (int) target.first);
-                if (slope != 1.0f &&
-                        slope != -1.0f) {
-                    continue;
-                } else {
-                    return false;
-                }
+            } else if (slope == 1.0f ||
+                    slope == -1.0f) {
+                return false;
             }
+        }
+        return true;
+    }
+
+    private boolean isAddRowNeeded() {
+        if (queenPosition.size() == QUEEN_TOTAL) {
+            addToSolution();
+            disposePosition = queenPosition.get(queenPosition.size() - 1);
+            queenPosition.remove(queenPosition.size() - 1);
+            return false;
         }
         return true;
     }
@@ -126,11 +127,11 @@ public class MainActivity extends AppCompatActivity {
         positionRecord.add(tempArray);
     }
 
-    private void showResult(int queenAmount) {
+    private void showResult() {
         for (int i = 0; i < positionRecord.size(); i++) {
             ArrayList<Pair> currentRecord = new ArrayList<>(positionRecord.get(i));
-            for (int row = 0; row < queenAmount; row++) {
-                for (int col = 0; col < queenAmount; col++) {
+            for (int row = 0; row < QUEEN_TOTAL; row++) {
+                for (int col = 0; col < QUEEN_TOTAL; col++) {
                     if ((int) currentRecord.get(row).first == col) {
                         stringBuilder.append("Q");
                     } else {
